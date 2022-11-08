@@ -49,6 +49,8 @@ public class DB : MonoBehaviour {
 
     public void InvocarComidasIniciales(){
 
+        LimpiarComidas();
+
         dbCommand = dbConnection.CreateCommand();
         string sqlQuery = "SELECT * FROM Comidas";
         dbCommand.CommandText = sqlQuery;
@@ -80,6 +82,9 @@ public class DB : MonoBehaviour {
     public InputField busquedaIF;
 
     public void BuscarComida(){
+
+        LimpiarComidas();
+
         dbCommand = dbConnection.CreateCommand();
         string sqlQuery = String.Format("SELECT * FROM Comidas WHERE Nombre = \"{0}\"", busquedaIF.text);  
         dbCommand.CommandText = sqlQuery;
@@ -87,26 +92,33 @@ public class DB : MonoBehaviour {
 
         if(dataReader.Read()){
 
-            string nombre = dataReader.GetString(1);
-            string dlc = dataReader.GetString(2);
-            string vida = dataReader.GetString(3);
-            string hambre = dataReader.GetString(4);
-            string cordura = dataReader.GetString(5);
-            string podredumbre = dataReader.GetString(6);
-            string coccion = dataReader.GetString(7);
+            GameObject prefab = Instantiate(prefabComida);
+            prefab.transform.SetParent(comidasContainer.gameObject.transform, false);
+            prefab.gameObject.name = "Prefab: " + dataReader.GetString(1);
 
-            Debug.Log(nombre);
-            Debug.Log(dlc);
-            Debug.Log(vida);
-            Debug.Log(hambre);
-            Debug.Log(cordura);
-            Debug.Log(podredumbre);
-            Debug.Log(coccion);
+            prefab.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(dataReader.GetString(1)); //Icono
+            prefab.transform.GetChild(1).GetComponent<Text>().text = dataReader.GetString(1); //Nombre
+            prefab.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = dataReader.GetString(3); //Stat: Vida
+            prefab.transform.GetChild(2).GetChild(1).GetComponent<Text>().text = dataReader.GetString(4); //Stat: Hambre
+            prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text = dataReader.GetString(5); //Stat: Cordura
+            prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text = dataReader.GetString(6); //Stat: Putrefaccion
 
+        }else if(busquedaIF.text == "" || busquedaIF.text == null){
+            InvocarComidasIniciales();
         }else{
-            Debug.Log("No hay data con ese nombre");
+            Debug.Log("No hay comidas por mostrar!");
         }
     }
+
+    private void LimpiarComidas(){
+
+        foreach(Transform t in  comidasContainer.transform){
+            Destroy(t.gameObject);
+        }
+
+    }
     #endregion
+
+
     
 }
