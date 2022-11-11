@@ -68,10 +68,10 @@ public class DB : MonoBehaviour {
 
             prefab.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(dataReader.GetString(1)); //Icono
             prefab.transform.GetChild(1).GetComponent<Text>().text = dataReader.GetString(1); //Nombre
-            prefab.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = dataReader.GetString(3); //Stat: Vida
-            prefab.transform.GetChild(2).GetChild(1).GetComponent<Text>().text = dataReader.GetString(4); //Stat: Hambre
-            prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text = dataReader.GetString(5); //Stat: Cordura
-            prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text = dataReader.GetString(6); //Stat: Putrefaccion
+            prefab.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = dataReader.GetFloat(3).ToString(); //Stat: Vida
+            prefab.transform.GetChild(2).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(4).ToString(); //Stat: Hambre
+            prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text = dataReader.GetFloat(5).ToString(); //Stat: Cordura
+            prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text = dataReader.GetFloat(6).ToString(); //Stat: Putrefaccion
 
         }
     }
@@ -119,6 +119,34 @@ public class DB : MonoBehaviour {
     }
     #endregion
 
+    #region OrdenarComidas
 
+    public void OrdenarPorEstadistica(string statComida){
+
+        LimpiarComidas();
+
+        dbCommand = dbConnection.CreateCommand();
+        string sqlQuery = String.Format("SELECT * FROM Comidas ORDER BY \"{0}\" DESC", statComida);    
+        dbCommand.CommandText = sqlQuery;
+        dataReader = dbCommand.ExecuteReader();
+
+        while(dataReader.Read()){
+
+            GameObject prefab = Instantiate(prefabComida);
+            prefab.transform.SetParent(comidasContainer.gameObject.transform, false);
+            prefab.gameObject.name = "Prefab: " + dataReader.GetString(1);
+
+            prefab.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(dataReader.GetString(1)); //Icono
+            prefab.transform.GetChild(1).GetComponent<Text>().text = dataReader.GetString(1); //Nombre
+            prefab.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = dataReader.GetFloat(3).ToString(); //Stat: Vida
+            prefab.transform.GetChild(2).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(4).ToString(); //Stat: Hambre
+            prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text = dataReader.GetFloat(5).ToString(); //Stat: Cordura
+            prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text = dataReader.GetFloat(6).ToString(); //Stat: Putrefaccion
+
+        }
+    }
+
+
+    #endregion
     
 }
