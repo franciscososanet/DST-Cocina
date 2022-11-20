@@ -9,8 +9,6 @@ using UnityEngine.UI;
 
 public class DB : MonoBehaviour {
 
-    
-
     #region Conexion
 
     public string rutaDB;
@@ -86,11 +84,13 @@ public class DB : MonoBehaviour {
         LimpiarComidas();
 
         dbCommand = dbConnection.CreateCommand();
-        string sqlQuery = String.Format("SELECT * FROM Comidas WHERE Nombre = \"{0}\"", busquedaIF.text);  
+
+        string sqlQuery = String.Format("SELECT * FROM Comidas WHERE Nombre LIKE '%{0}%' OR Requisitos LIKE '%{0}%' --case-insensitive", busquedaIF.text);
         dbCommand.CommandText = sqlQuery;
         dataReader = dbCommand.ExecuteReader();
 
-        if(dataReader.Read()){
+        try{
+            while(dataReader.Read()){
 
             GameObject prefab = Instantiate(prefabComida);
             prefab.transform.SetParent(comidasContainer.gameObject.transform, false);
@@ -98,16 +98,15 @@ public class DB : MonoBehaviour {
 
             prefab.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(dataReader.GetString(1)); //Icono
             prefab.transform.GetChild(1).GetComponent<Text>().text = dataReader.GetString(1); //Nombre
-            prefab.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = dataReader.GetString(3); //Stat: Vida
-            prefab.transform.GetChild(2).GetChild(1).GetComponent<Text>().text = dataReader.GetString(4); //Stat: Hambre
-            prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text = dataReader.GetString(5); //Stat: Cordura
-            prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text = dataReader.GetString(6); //Stat: Putrefaccion
-
-        }else if(busquedaIF.text == "" || busquedaIF.text == null){
-            InvocarComidasIniciales();
-        }else{
-            Debug.Log("No hay comidas por mostrar!");
+            prefab.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = dataReader.GetFloat(3).ToString(); //Stat: Vida
+            prefab.transform.GetChild(2).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(4).ToString(); //Stat: Hambre
+            prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text = dataReader.GetFloat(5).ToString(); //Stat: Cordura
+            prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text = dataReader.GetFloat(6).ToString(); //Stat: Putrefaccion
+            }
+        }catch(Exception e){
+            Debug.Log("ERROR: " + e);
         }
+        
     }
 
     private void LimpiarComidas(){
@@ -149,4 +148,5 @@ public class DB : MonoBehaviour {
 
     #endregion
     
+  
 }
