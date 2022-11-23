@@ -62,7 +62,9 @@ public class DB : MonoBehaviour {
 
             GameObject prefab = Instantiate(prefabComida);
             prefab.transform.SetParent(comidasContainer.gameObject.transform, false);
-            prefab.gameObject.name = "Prefab: " + dataReader.GetString(1);
+            prefab.gameObject.name = dataReader.GetString(1);
+            
+
 
             prefab.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(dataReader.GetString(1)); //Icono
             prefab.transform.GetChild(1).GetComponent<Text>().text = dataReader.GetString(1); //Nombre
@@ -70,6 +72,20 @@ public class DB : MonoBehaviour {
             prefab.transform.GetChild(2).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(4).ToString(); //Stat: Hambre
             prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text = dataReader.GetFloat(5).ToString(); //Stat: Cordura
             prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text = dataReader.GetFloat(6).ToString(); //Stat: Putrefaccion
+            prefab.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = dataReader.GetString(2); //Invisible: DLC 
+            prefab.transform.GetChild(3).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(7).ToString(); //Invisible: Coccion 
+            prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text = dataReader.GetString(8); //Invisible: Ingredientes
+
+            string nombre = prefab.transform.GetChild(1).GetComponent<Text>().text;
+            string dlc = prefab.transform.GetChild(3).GetChild(0).GetComponent<Text>().text;
+            string vida = prefab.transform.GetChild(2).GetChild(0).GetComponent<Text>().text;
+            string hambre = prefab.transform.GetChild(2).GetChild(1).GetComponent<Text>().text;
+            string cordura = prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text;
+            string putrefaccion = prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text;
+            string coccion = prefab.transform.GetChild(3).GetChild(1).GetComponent<Text>().text;
+            string ingredientes = prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text;
+            
+            prefab.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(delegate {ObtenerInfo(nombre, dlc, vida, hambre, cordura, putrefaccion, coccion, ingredientes); });
 
         }
     }
@@ -84,7 +100,6 @@ public class DB : MonoBehaviour {
         LimpiarComidas();
 
         dbCommand = dbConnection.CreateCommand();
-
         string sqlQuery = String.Format("SELECT * FROM Comidas WHERE Nombre LIKE '%{0}%' OR Requisitos LIKE '%{0}%' --case-insensitive", busquedaIF.text);
         dbCommand.CommandText = sqlQuery;
         dataReader = dbCommand.ExecuteReader();
@@ -94,7 +109,7 @@ public class DB : MonoBehaviour {
 
             GameObject prefab = Instantiate(prefabComida);
             prefab.transform.SetParent(comidasContainer.gameObject.transform, false);
-            prefab.gameObject.name = "Prefab: " + dataReader.GetString(1);
+            prefab.gameObject.name = dataReader.GetString(1);
 
             prefab.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(dataReader.GetString(1)); //Icono
             prefab.transform.GetChild(1).GetComponent<Text>().text = dataReader.GetString(1); //Nombre
@@ -133,7 +148,7 @@ public class DB : MonoBehaviour {
 
             GameObject prefab = Instantiate(prefabComida);
             prefab.transform.SetParent(comidasContainer.gameObject.transform, false);
-            prefab.gameObject.name = "Prefab: " + dataReader.GetString(1);
+            prefab.gameObject.name = dataReader.GetString(1);
 
             prefab.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(dataReader.GetString(1)); //Icono
             prefab.transform.GetChild(1).GetComponent<Text>().text = dataReader.GetString(1); //Nombre
@@ -148,5 +163,24 @@ public class DB : MonoBehaviour {
 
     #endregion
     
-  
+    #region MostrarInfoComida
+
+    public GameObject panelInfo;
+
+    public void OcultarPanelInfo(){
+        panelInfo.SetActive(false);
+    }
+
+    public void ObtenerInfo(string nombre, string dlc, string vida, string hambre, string cordura, string putrefaccion, string coccion, string ingredientes){
+
+        panelInfo.transform.GetChild(1).GetComponent<Text>().text = nombre;
+        panelInfo.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = dlc;
+        panelInfo.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = coccion;
+        panelInfo.transform.GetChild(4).GetChild(0).GetComponent<Text>().text = ingredientes;
+
+        panelInfo.SetActive(true);
+
+    }
+    
+    #endregion
 }
