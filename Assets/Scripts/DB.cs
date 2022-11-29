@@ -99,27 +99,36 @@ public class DB : MonoBehaviour {
         dataReader = dbCommand.ExecuteReader();
 
         try{
-            if(dataReader.Read()){
-                while(dataReader.Read()){
+            while(dataReader.Read()){
 
                 GameObject prefab = Instantiate(prefabComida);
                 prefab.transform.SetParent(comidasContainer.gameObject.transform, false);
-                prefab.gameObject.name = dataReader.GetString(1);
 
+                prefab.gameObject.name = dataReader.GetString(1);
                 prefab.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(dataReader.GetString(1)); //Icono
                 prefab.transform.GetChild(1).GetComponent<Text>().text = dataReader.GetString(1); //Nombre
+                prefab.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = dataReader.GetString(2);//DLC
                 prefab.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = dataReader.GetFloat(3).ToString(); //Stat: Vida
                 prefab.transform.GetChild(2).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(4).ToString(); //Stat: Hambre
                 prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text = dataReader.GetFloat(5).ToString(); //Stat: Cordura
                 prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text = dataReader.GetFloat(6).ToString(); //Stat: Putrefaccion
-                }
-            }else{
-                Debug.Log("No hay datos por leer");
-            }
+                prefab.transform.GetChild(3).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(7).ToString(); //Stat: Coccion
+                prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text = dataReader.GetString(8); //Ingredientes
+
+                string nombre = prefab.transform.GetChild(1).GetComponent<Text>().text;
+                string dlc = prefab.transform.GetChild(3).GetChild(0).GetComponent<Text>().text;
+                string vida = prefab.transform.GetChild(2).GetChild(0).GetComponent<Text>().text;
+                string hambre = prefab.transform.GetChild(2).GetChild(1).GetComponent<Text>().text;
+                string cordura = prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text;
+                string putrefaccion = prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text;
+                string coccion = prefab.transform.GetChild(3).GetChild(1).GetComponent<Text>().text;
+                string ingredientes = prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text;
+
+                prefab.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(delegate {ObtenerInfo(nombre, dlc, vida, hambre, cordura, putrefaccion, coccion, ingredientes); });
+            }    
         }catch(Exception e){
             Debug.Log("ERROR: " + e);
-        }
-        
+        } 
     }
 
     private void LimpiarComidas(){
@@ -179,6 +188,8 @@ public class DB : MonoBehaviour {
     public void ObtenerInfo(string nombre, string dlc, string vida, string hambre, string cordura, string putrefaccion, string coccion, string ingredientes){
 
         LimpiarIngredientes();
+
+        Debug.Log(dlc);
 
         switch(dlc){
             case "Shipwrecked":
