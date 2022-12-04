@@ -1,11 +1,11 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using System.Data;
 using Mono.Data.Sqlite;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Networking;
 
 public class DB : MonoBehaviour {
 
@@ -18,13 +18,6 @@ public class DB : MonoBehaviour {
     public IDataReader dataReader;
     public string nombreDB = "ComidasDB.db";
 
-    public void AbrirDB(){
-        rutaDB = Application.dataPath + "/StreamingAssets/" + nombreDB;
-        conexion = "URI=file:" + rutaDB;
-        dbConnection = new SqliteConnection(conexion);
-        dbConnection.Open();
-    }
-
     public void CerrarDB(){
         dataReader.Close();
         dataReader = null;
@@ -33,10 +26,36 @@ public class DB : MonoBehaviour {
         dbConnection.Close();
         dbConnection = null;
     }
+
+    IEnumerator AbrirDBAndroid(){
+        UnityWebRequest uwr = new UnityWebRequest("jar:file://" + Application.dataPath + "!/assets/" + nombreDB);
+        uwr.downloadHandler = new DownloadHandlerBuffer();
+            
+        yield return uwr.SendWebRequest();
+
+        File.WriteAllBytes(rutaDB, uwr.downloadHandler.data);
+        InvocarComidasIniciales();
+    }
+
     #endregion Conexion
 
     private void Start(){
-        AbrirDB();
+
+        if(Application.platform == RuntimePlatform.WindowsEditor){
+            rutaDB = Application.dataPath + "/StreamingAssets/" + nombreDB;
+        }
+
+        if(Application.platform == RuntimePlatform.Android){
+            rutaDB = Application.persistentDataPath + "/" + nombreDB;
+            if(!File.Exists(rutaDB)){
+                StartCoroutine(AbrirDBAndroid());
+            } 
+        }
+
+        conexion = "URI=file:" + rutaDB;
+        dbConnection = new SqliteConnection(conexion);
+        dbConnection.Open();
+
         InvocarComidasIniciales();
     }
 
@@ -62,13 +81,14 @@ public class DB : MonoBehaviour {
             
             prefab.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(dataReader.GetString(1)); //Icono
             prefab.transform.GetChild(1).GetComponent<Text>().text = dataReader.GetString(1); //Nombre
-            prefab.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = dataReader.GetFloat(3).ToString(); //Stat: Vida
-            prefab.transform.GetChild(2).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(4).ToString(); //Stat: Hambre
-            prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text = dataReader.GetFloat(5).ToString(); //Stat: Cordura
-            prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text = dataReader.GetFloat(6).ToString(); //Stat: Putrefaccion
-            prefab.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = dataReader.GetString(2); //Invisible: DLC 
-            prefab.transform.GetChild(3).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(7).ToString(); //Invisible: Coccion 
-            prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text = dataReader.GetString(8); //Invisible: Ingredientes
+            prefab.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = dataReader.GetString(3); //Invisible: DLC 
+            prefab.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = dataReader.GetFloat(4).ToString(); //Stat: Vida
+            prefab.transform.GetChild(2).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(5).ToString(); //Stat: Hambre
+            prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text = dataReader.GetFloat(6).ToString(); //Stat: Cordura
+            prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text = dataReader.GetFloat(7).ToString(); //Stat: Putrefaccion
+            prefab.transform.GetChild(3).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(8).ToString(); //Invisible: Coccion 
+            prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text = dataReader.GetString(9); //Invisible: Requisitos
+            prefab.transform.GetChild(3).GetChild(3).GetComponent<Text>().text = dataReader.GetString(10); //Invisible: Restricciones
 
             string nombre = prefab.transform.GetChild(1).GetComponent<Text>().text;
             string dlc = prefab.transform.GetChild(3).GetChild(0).GetComponent<Text>().text;
@@ -77,9 +97,10 @@ public class DB : MonoBehaviour {
             string cordura = prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text;
             string putrefaccion = prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text;
             string coccion = prefab.transform.GetChild(3).GetChild(1).GetComponent<Text>().text;
-            string ingredientes = prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text;
+            string requisitos = prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text;
+            string restricciones = prefab.transform.GetChild(3).GetChild(3).GetComponent<Text>().text;
             
-            prefab.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(delegate {ObtenerInfo(nombre, dlc, vida, hambre, cordura, putrefaccion, coccion, ingredientes); });
+            prefab.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(delegate {ObtenerInfo(nombre, dlc, vida, hambre, cordura, putrefaccion, coccion, requisitos, restricciones); }); //agregar restricicones
 
         }
     }
@@ -113,7 +134,7 @@ public class DB : MonoBehaviour {
                 prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text = dataReader.GetFloat(5).ToString(); //Stat: Cordura
                 prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text = dataReader.GetFloat(6).ToString(); //Stat: Putrefaccion
                 prefab.transform.GetChild(3).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(7).ToString(); //Stat: Coccion
-                prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text = dataReader.GetString(8); //Ingredientes
+                prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text = dataReader.GetString(8); //Requisitos
 
                 string nombre = prefab.transform.GetChild(1).GetComponent<Text>().text;
                 string dlc = prefab.transform.GetChild(3).GetChild(0).GetComponent<Text>().text;
@@ -122,9 +143,10 @@ public class DB : MonoBehaviour {
                 string cordura = prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text;
                 string putrefaccion = prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text;
                 string coccion = prefab.transform.GetChild(3).GetChild(1).GetComponent<Text>().text;
-                string ingredientes = prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text;
+                string requisitos = prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text;
+                string restricciones = "a";
 
-                prefab.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(delegate {ObtenerInfo(nombre, dlc, vida, hambre, cordura, putrefaccion, coccion, ingredientes); });
+                prefab.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(delegate {ObtenerInfo(nombre, dlc, vida, hambre, cordura, putrefaccion, coccion, requisitos, restricciones); });
             }    
         }catch(Exception e){
             Debug.Log("ERROR: " + e);
@@ -165,7 +187,7 @@ public class DB : MonoBehaviour {
             prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text = dataReader.GetFloat(6).ToString(); //Stat: Putrefaccion
             prefab.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = dataReader.GetString(2); //Invisible: DLC 
             prefab.transform.GetChild(3).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(7).ToString(); //Invisible: Coccion 
-            prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text = dataReader.GetString(8); //Invisible: Ingredientes
+            prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text = dataReader.GetString(8); //Invisible: Requisitos
 
             string nombre = prefab.transform.GetChild(1).GetComponent<Text>().text;
             string dlc = prefab.transform.GetChild(3).GetChild(0).GetComponent<Text>().text;
@@ -174,9 +196,10 @@ public class DB : MonoBehaviour {
             string cordura = prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text;
             string putrefaccion = prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text;
             string coccion = prefab.transform.GetChild(3).GetChild(1).GetComponent<Text>().text;
-            string ingredientes = prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text;
+            string requisitos = prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text;
+            string restricciones = "b";
             
-            prefab.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(delegate {ObtenerInfo(nombre, dlc, vida, hambre, cordura, putrefaccion, coccion, ingredientes); });
+            prefab.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(delegate {ObtenerInfo(nombre, dlc, vida, hambre, cordura, putrefaccion, coccion, requisitos, restricciones); });
 
         }
     }
@@ -186,11 +209,20 @@ public class DB : MonoBehaviour {
     #region MostrarInfoComida
 
     public GameObject panelInfo;
-    public GameObject ingredientesContainer;
+    public GameObject requisitosContainer;
+    public GameObject restriccionesContainer;
     public GameObject prefabIngredienteTxt;
+    public GameObject prefabRestriccionTxt;
+    public Text tipoRestriccion;
 
-    private void LimpiarIngredientes(){
-        foreach(Transform t in  ingredientesContainer.transform){
+    private void LimpiarRequisitos(){
+        foreach(Transform t in requisitosContainer.transform){
+            Destroy(t.gameObject);
+        }
+    }
+
+    private void LimpiarRestricciones(){
+        foreach(Transform t in restriccionesContainer.transform){
             Destroy(t.gameObject);
         }
     }
@@ -199,9 +231,10 @@ public class DB : MonoBehaviour {
         panelInfo.SetActive(false);
     }
 
-    public void ObtenerInfo(string nombre, string dlc, string vida, string hambre, string cordura, string putrefaccion, string coccion, string ingredientes){
+    public void ObtenerInfo(string nombre, string dlc, string vida, string hambre, string cordura, string putrefaccion, string coccion, string requisitos, string restricciones){
 
-        LimpiarIngredientes();
+        LimpiarRequisitos();
+        LimpiarRestricciones();
 
         switch(dlc){
             case "Shipwrecked":
@@ -223,33 +256,76 @@ public class DB : MonoBehaviour {
         panelInfo.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = dlc;
         panelInfo.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = coccion + " segundos";
 
-        string[] ingredientesArray = ingredientes.Split(", ");
+        string[] requisitosArray = requisitos.Split(", ");
 
-        foreach(string ingrediente in ingredientesArray){
+        foreach(string requisito in requisitosArray){
 
-            GameObject prefab = Instantiate(prefabIngredienteTxt);
-            prefab.transform.SetParent(ingredientesContainer.gameObject.transform, false);
-            prefab.gameObject.name = ingrediente;
+            GameObject prefabI = Instantiate(prefabIngredienteTxt);
+            prefabI.transform.SetParent(requisitosContainer.gameObject.transform, false);
+            prefabI.gameObject.name = requisito;
 
-            prefab.GetComponent<Text>().text = ingrediente;
+            prefabI.GetComponent<Text>().text = requisito;
             
-            string ingredienteTrimmeado = ingrediente.Trim( new Char[] {' ', '.', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'});
+            string ingredienteTrimmeado = requisito.Trim( new Char[] {' ', '.', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'});
 
             switch(nombre){
                 case "Pegote húmedo":
-                prefab.transform.GetChild(0).gameObject.SetActive(false);
+                prefabI.transform.GetChild(0).gameObject.SetActive(false);
                 break;
 
                 case "Pavo asado": //TODO: Es un ingrediente U otro. Arreglar
-                prefab.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(ingredienteTrimmeado);
+                prefabI.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(ingredienteTrimmeado);
                 break;
 
                 default:
-                prefab.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(ingredienteTrimmeado);
+                prefabI.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(ingredienteTrimmeado);
                 break;
             }
 
-            prefab.SetActive(true);
+            prefabI.SetActive(true);
+        }
+
+        string[] restriccionesArray = restricciones.Split(": ");
+
+        if(1 < restriccionesArray.Length){
+            
+            string[] restriccionesSeparadas = restriccionesArray[1].Split(", ");
+
+            foreach(string restriccion in restriccionesSeparadas){
+
+                GameObject prefabR = Instantiate(prefabRestriccionTxt);        
+                prefabR.transform.SetParent(restriccionesContainer.gameObject.transform, false);
+
+                prefabR.gameObject.name = restriccionesArray[0] + " " + restriccionesArray[1];
+                prefabR.GetComponent<Text>().text = restriccion;
+                prefabR.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(restriccion);
+
+                Debug.Log(restriccion);
+            }
+        
+        }
+        
+        switch(restriccionesArray[0]){
+
+            case "NO":
+            tipoRestriccion.text = "NO PONER";
+            break;
+
+            case "COCINANDO EN":
+            tipoRestriccion.text = "COCINAR EN";
+            break;
+
+            case "MÁXIMO":
+            tipoRestriccion.text = "MÁXIMO";
+            break;
+
+            case "SOLO":
+            tipoRestriccion.text = "SOLO PONER";
+            break;
+
+            default:
+            tipoRestriccion.text = "";
+            break;
         }
 
         panelInfo.SetActive(true);
