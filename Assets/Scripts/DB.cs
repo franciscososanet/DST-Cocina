@@ -34,7 +34,7 @@ public class DB : MonoBehaviour {
         yield return uwr.SendWebRequest();
 
         File.WriteAllBytes(rutaDB, uwr.downloadHandler.data);
-        InvocarComidasIniciales();
+        InvocarComidas();
     }
 
     #endregion Conexion
@@ -56,7 +56,7 @@ public class DB : MonoBehaviour {
         dbConnection = new SqliteConnection(conexion);
         dbConnection.Open();
 
-        InvocarComidasIniciales();
+        InvocarComidas();
     }
 
     #region ComidasIniciales
@@ -64,12 +64,15 @@ public class DB : MonoBehaviour {
     public GameObject comidasContainer;
     public GameObject prefabComida;
 
-    public void InvocarComidasIniciales(){
+    public void InvocarComidas(string QUERY = "SELECT * FROM Comidas"){
 
         LimpiarComidas();
 
         dbCommand = dbConnection.CreateCommand();
-        string sqlQuery = "SELECT * FROM Comidas";
+        string sqlQuery = String.Format("{0}", QUERY);
+        Debug.Log(QUERY);
+        Debug.Log(sqlQuery);
+        
         dbCommand.CommandText = sqlQuery;
         dataReader = dbCommand.ExecuteReader();
 
@@ -101,107 +104,27 @@ public class DB : MonoBehaviour {
             string restricciones = prefab.transform.GetChild(3).GetChild(3).GetComponent<Text>().text;
             
             prefab.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(delegate {ObtenerInfo(nombre, dlc, vida, hambre, cordura, putrefaccion, coccion, requisitos, restricciones); }); //agregar restricicones
-
         }
-    }
-
-    #endregion
-
-    #region BusquedaDeComida
-    public InputField busquedaIF;
-
-    public void BuscarComida(){
-
-        LimpiarComidas();
-
-        dbCommand = dbConnection.CreateCommand();
-        string sqlQuery = String.Format("SELECT * FROM Comidas WHERE Nombre LIKE '%{0}%' OR Equivalencias LIKE '%{0}%' OR Requisitos LIKE '%{0}%' --case-insensitive", busquedaIF.text);
-        dbCommand.CommandText = sqlQuery;
-        dataReader = dbCommand.ExecuteReader();
-
-        try{
-            while(dataReader.Read()){
-
-                GameObject prefab = Instantiate(prefabComida);
-                prefab.transform.SetParent(comidasContainer.gameObject.transform, false);
-
-                prefab.gameObject.name = dataReader.GetString(1);
-                prefab.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(dataReader.GetString(1)); //Icono
-                prefab.transform.GetChild(1).GetComponent<Text>().text = dataReader.GetString(1); //Nombre
-                prefab.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = dataReader.GetString(2);//DLC
-                prefab.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = dataReader.GetFloat(3).ToString(); //Stat: Vida
-                prefab.transform.GetChild(2).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(4).ToString(); //Stat: Hambre
-                prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text = dataReader.GetFloat(5).ToString(); //Stat: Cordura
-                prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text = dataReader.GetFloat(6).ToString(); //Stat: Putrefaccion
-                prefab.transform.GetChild(3).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(7).ToString(); //Stat: Coccion
-                prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text = dataReader.GetString(8); //Requisitos
-
-                string nombre = prefab.transform.GetChild(1).GetComponent<Text>().text;
-                string dlc = prefab.transform.GetChild(3).GetChild(0).GetComponent<Text>().text;
-                string vida = prefab.transform.GetChild(2).GetChild(0).GetComponent<Text>().text;
-                string hambre = prefab.transform.GetChild(2).GetChild(1).GetComponent<Text>().text;
-                string cordura = prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text;
-                string putrefaccion = prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text;
-                string coccion = prefab.transform.GetChild(3).GetChild(1).GetComponent<Text>().text;
-                string requisitos = prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text;
-                string restricciones = "a";
-
-                prefab.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(delegate {ObtenerInfo(nombre, dlc, vida, hambre, cordura, putrefaccion, coccion, requisitos, restricciones); });
-            }    
-        }catch(Exception e){
-            Debug.Log("ERROR: " + e);
-        } 
     }
 
     private void LimpiarComidas(){
-
         foreach(Transform t in  comidasContainer.transform){
             Destroy(t.gameObject);
         }
-
     }
+
     #endregion
 
-    #region OrdenarComidas
+    #region Querys
+
+    public InputField busquedaIF;
+
+    public void BuscarComida(){
+        InvocarComidas(String.Format("SELECT * FROM Comidas WHERE Nombre LIKE '%{0}%' OR Equivalencias LIKE '%{0}%' OR Requisitos LIKE '%{0}%' --case-insensitive", busquedaIF.text));        
+    }
 
     public void OrdenarPorEstadistica(string statComida){
-
-        LimpiarComidas();
-
-        dbCommand = dbConnection.CreateCommand();
-        string sqlQuery = String.Format("SELECT * FROM Comidas WHERE Nombre LIKE '%{0}%' OR Equivalencias LIKE '%{0}%' OR Requisitos LIKE '%{0}%' ORDER BY \"{1}\" DESC --case-insensitive", busquedaIF.text, statComida);    
-        dbCommand.CommandText = sqlQuery;
-        dataReader = dbCommand.ExecuteReader();
-
-        while(dataReader.Read()){
-
-            GameObject prefab = Instantiate(prefabComida);
-            prefab.transform.SetParent(comidasContainer.gameObject.transform, false);
-            prefab.gameObject.name = dataReader.GetString(1);
-            
-            prefab.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(dataReader.GetString(1)); //Icono
-            prefab.transform.GetChild(1).GetComponent<Text>().text = dataReader.GetString(1); //Nombre
-            prefab.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = dataReader.GetFloat(3).ToString(); //Stat: Vida
-            prefab.transform.GetChild(2).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(4).ToString(); //Stat: Hambre
-            prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text = dataReader.GetFloat(5).ToString(); //Stat: Cordura
-            prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text = dataReader.GetFloat(6).ToString(); //Stat: Putrefaccion
-            prefab.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = dataReader.GetString(2); //Invisible: DLC 
-            prefab.transform.GetChild(3).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(7).ToString(); //Invisible: Coccion 
-            prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text = dataReader.GetString(8); //Invisible: Requisitos
-
-            string nombre = prefab.transform.GetChild(1).GetComponent<Text>().text;
-            string dlc = prefab.transform.GetChild(3).GetChild(0).GetComponent<Text>().text;
-            string vida = prefab.transform.GetChild(2).GetChild(0).GetComponent<Text>().text;
-            string hambre = prefab.transform.GetChild(2).GetChild(1).GetComponent<Text>().text;
-            string cordura = prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text;
-            string putrefaccion = prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text;
-            string coccion = prefab.transform.GetChild(3).GetChild(1).GetComponent<Text>().text;
-            string requisitos = prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text;
-            string restricciones = "b";
-            
-            prefab.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(delegate {ObtenerInfo(nombre, dlc, vida, hambre, cordura, putrefaccion, coccion, requisitos, restricciones); });
-
-        }
+        InvocarComidas(String.Format("SELECT * FROM Comidas WHERE Nombre LIKE '%{0}%' OR Equivalencias LIKE '%{0}%' OR Requisitos LIKE '%{0}%' ORDER BY \"{1}\" DESC --case-insensitive", busquedaIF.text, statComida));
     }
 
     #endregion
@@ -304,7 +227,7 @@ public class DB : MonoBehaviour {
             }
         
         }
-        
+
         switch(restriccionesArray[0]){
 
             case "NO":
