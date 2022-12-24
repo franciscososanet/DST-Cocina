@@ -70,8 +70,6 @@ public class DB : MonoBehaviour {
 
         dbCommand = dbConnection.CreateCommand();
         string sqlQuery = String.Format("{0}", QUERY);
-        Debug.Log(QUERY);
-        Debug.Log(sqlQuery);
         
         dbCommand.CommandText = sqlQuery;
         dataReader = dbCommand.ExecuteReader();
@@ -84,17 +82,15 @@ public class DB : MonoBehaviour {
             
             prefab.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(dataReader.GetString(1)); //Icono
             prefab.transform.GetChild(1).GetComponent<Text>().text = dataReader.GetString(1); //Nombre
-            prefab.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = dataReader.GetString(3); //Invisible: DLC 
             prefab.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = dataReader.GetFloat(4).ToString(); //Stat: Vida
             prefab.transform.GetChild(2).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(5).ToString(); //Stat: Hambre
             prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text = dataReader.GetFloat(6).ToString(); //Stat: Cordura
             prefab.transform.GetChild(2).GetChild(3).GetComponent<Text>().text = dataReader.GetFloat(7).ToString(); //Stat: Putrefaccion
-            prefab.transform.GetChild(3).GetChild(1).GetComponent<Text>().text = dataReader.GetFloat(8).ToString(); //Invisible: Coccion 
+            prefab.transform.GetChild(2).GetChild(4).GetComponent<Text>().text = dataReader.GetFloat(8).ToString() + "''"; //Stat: Coccion 
             prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text = dataReader.GetString(9); //Invisible: Requisitos
             prefab.transform.GetChild(3).GetChild(3).GetComponent<Text>().text = dataReader.GetString(10); //Invisible: Restricciones
 
             string nombre = prefab.transform.GetChild(1).GetComponent<Text>().text;
-            string dlc = prefab.transform.GetChild(3).GetChild(0).GetComponent<Text>().text;
             string vida = prefab.transform.GetChild(2).GetChild(0).GetComponent<Text>().text;
             string hambre = prefab.transform.GetChild(2).GetChild(1).GetComponent<Text>().text;
             string cordura = prefab.transform.GetChild(2).GetChild(2).GetComponent<Text>().text;
@@ -103,7 +99,9 @@ public class DB : MonoBehaviour {
             string requisitos = prefab.transform.GetChild(3).GetChild(2).GetComponent<Text>().text;
             string restricciones = prefab.transform.GetChild(3).GetChild(3).GetComponent<Text>().text;
             
-            prefab.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(delegate {ObtenerInfo(nombre, dlc, vida, hambre, cordura, putrefaccion, coccion, requisitos, restricciones); }); //agregar restricicones
+            
+            prefab.GetComponent<Button>().onClick.AddListener(delegate {ObtenerInfo(nombre, vida, hambre, cordura, putrefaccion, coccion, requisitos, restricciones); }); 
+            prefab.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(delegate {ObtenerInfo(nombre, vida, hambre, cordura, putrefaccion, coccion, requisitos, restricciones); });
         }
     }
 
@@ -151,33 +149,17 @@ public class DB : MonoBehaviour {
     }
 
     public void OcultarPanelInfo(){
+        LimpiarRequisitos();
+        LimpiarRestricciones();
         panelInfo.SetActive(false);
     }
 
-    public void ObtenerInfo(string nombre, string dlc, string vida, string hambre, string cordura, string putrefaccion, string coccion, string requisitos, string restricciones){
+    public void ObtenerInfo(string nombre, string vida, string hambre, string cordura, string putrefaccion, string coccion, string requisitos, string restricciones){
 
         LimpiarRequisitos();
         LimpiarRestricciones();
 
-        switch(dlc){
-            case "Shipwrecked":
-            panelInfo.transform.GetChild(2).GetChild(1).GetComponent<Image>().sprite = Resources.Load<Sprite>("Shipwrecked"); 
-            panelInfo.transform.GetChild(2).GetChild(1).gameObject.SetActive(true);
-            break;
-
-            case "Reign of Giants":
-            panelInfo.transform.GetChild(2).GetChild(1).GetComponent<Image>().sprite = Resources.Load<Sprite>("Reign of Giants");
-            panelInfo.transform.GetChild(2).GetChild(1).gameObject.SetActive(true);
-            break;
-
-            default:
-            panelInfo.transform.GetChild(2).GetChild(1).gameObject.SetActive(false);
-            break;
-        }
-
         panelInfo.transform.GetChild(1).GetComponent<Text>().text = nombre;
-        panelInfo.transform.GetChild(2).GetChild(0).GetComponent<Text>().text = dlc;
-        panelInfo.transform.GetChild(3).GetChild(0).GetComponent<Text>().text = coccion + " segundos";
 
         string[] requisitosArray = requisitos.Split(", ");
 
@@ -189,22 +171,27 @@ public class DB : MonoBehaviour {
 
             prefabI.GetComponent<Text>().text = requisito;
             
-            string ingredienteTrimmeado = requisito.Trim( new Char[] {' ', '.', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'});
+            string ingredienteTrimmeado = requisito.Trim(new Char[]{' ', '.', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'});
 
             switch(nombre){
                 case "Pegote húmedo":
                 prefabI.transform.GetChild(0).gameObject.SetActive(false);
                 break;
 
-                case "Pavo asado": //TODO: Es un ingrediente U otro. Arreglar
-                prefabI.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(ingredienteTrimmeado);
+                case "Pavo asado":
+                prefabI.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(ingredienteTrimmeado);              
+                if(prefabI.gameObject.name == "0.5 Vegetales ó Frutas"){
+                    prefabI.transform.parent.GetChild(2).GetChild(0).gameObject.GetComponent<Image>().sprite = Resources.Load<Sprite>("Vegetales");
+                    prefabI.transform.parent.GetChild(2).GetChild(1).gameObject.GetComponent<Image>().sprite = Resources.Load<Sprite>("Frutas");
+                    prefabI.transform.parent.GetChild(2).GetChild(1).gameObject.SetActive(true);   
+                }
                 break;
 
                 default:
-                prefabI.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(ingredienteTrimmeado);
+                prefabI.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(ingredienteTrimmeado); 
                 break;
             }
-
+            
             prefabI.SetActive(true);
         }
 
@@ -221,11 +208,10 @@ public class DB : MonoBehaviour {
 
                 prefabR.gameObject.name = restriccionesArray[0] + " " + restriccionesArray[1];
                 prefabR.GetComponent<Text>().text = restriccion;
-                prefabR.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(restriccion);
-
-                Debug.Log(restriccion);
+                string restriccionTrimmeado = restriccion.Trim( new Char[] {' ', '.', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'});
+                prefabR.transform.GetChild(0).GetComponent<Image>().sprite = Resources.Load<Sprite>(restriccionTrimmeado);
             }
-        
+
         }
 
         switch(restriccionesArray[0]){
@@ -250,6 +236,9 @@ public class DB : MonoBehaviour {
             tipoRestriccion.text = "";
             break;
         }
+
+        //TODO: Acomodar las restricciones
+
 
         panelInfo.SetActive(true);
 
