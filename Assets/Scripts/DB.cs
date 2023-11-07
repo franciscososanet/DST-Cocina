@@ -238,20 +238,20 @@ public class DB : MonoBehaviour {
         }
 
         //Temporal de esta forma: cambiar el tamaño del panel dependiendo la cantidad de restricciones
-        if(restriccionesContainer.transform.childCount == 0){
-            panelInfo.GetComponent<RectTransform>().offsetMin = new Vector2(15, 645);
-            restriccionesContainer.transform.parent.gameObject.SetActive(false);
-        }
+        // if(restriccionesContainer.transform.childCount == 0){
+        //     panelInfo.GetComponent<RectTransform>().offsetMin = new Vector2(15, 645);
+        //     restriccionesContainer.transform.parent.gameObject.SetActive(false);
+        // }
         
-        if(restriccionesContainer.transform.childCount >= 1 && restriccionesContainer.transform.childCount <= 3){
-            panelInfo.GetComponent<RectTransform>().offsetMin = new Vector2(15, 190);
-            restriccionesContainer.transform.parent.gameObject.SetActive(true);
-        } 
+        // if(restriccionesContainer.transform.childCount >= 1 && restriccionesContainer.transform.childCount <= 3){
+        //     panelInfo.GetComponent<RectTransform>().offsetMin = new Vector2(15, 190);
+        //     restriccionesContainer.transform.parent.gameObject.SetActive(true);
+        // } 
 
-        if(restriccionesContainer.transform.childCount >= 4){
-            panelInfo.GetComponent<RectTransform>().offsetMin = new Vector2(15, 40);
-            restriccionesContainer.transform.parent.gameObject.SetActive(true);
-        } 
+        // if(restriccionesContainer.transform.childCount >= 4){
+        //     panelInfo.GetComponent<RectTransform>().offsetMin = new Vector2(15, 40);
+        //     restriccionesContainer.transform.parent.gameObject.SetActive(true);
+        // } 
         
         panelInfo.SetActive(true);
 
